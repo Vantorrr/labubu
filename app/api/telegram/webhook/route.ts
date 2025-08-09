@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Helpers
     const sendWelcome = async (chatId: number | string) => {
       const appUrl = getAppUrl(req)
-      const photo = 'https://i.ibb.co/CtBz5Mq/1JdGFT5X.png'
+      const photoUrl = 'https://i.ibb.co/CtBz5Mq/1JdGFT5X.png'
       const caption = [
         '🎊 <b>LABUBU РУЛЕТКА</b> — выиграй настоящие призы!',
         '',
@@ -39,7 +39,15 @@ export async function POST(req: NextRequest) {
       }
       const form = new FormData()
       form.set('chat_id', String(chatId))
-      form.set('photo', photo)
+      try {
+        const imgRes = await fetch(photoUrl)
+        const imgBuf = await imgRes.arrayBuffer()
+        const file = new File([imgBuf], 'start.png', { type: 'image/png' })
+        form.set('photo', file)
+      } catch (e) {
+        // fallback: try by URL (may fail on Telegram side if not a direct file)
+        form.set('photo', photoUrl as any)
+      }
       form.set('caption', caption)
       form.set('parse_mode', 'HTML')
       form.set('reply_markup', JSON.stringify(kb))
