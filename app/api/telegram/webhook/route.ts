@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         inline_keyboard: [[
           { text: '🎮 Играть', web_app: { url: appUrl } }
         ], [
-          { text: '📜 Правила', url: `${appUrl}#rules` },
+          { text: '📜 Правила', callback_data: 'rules' },
           { text: '🆘 Поддержка', url: 'https://t.me/pavel_xdev' }
         ]]
       }
@@ -71,7 +71,53 @@ export async function POST(req: NextRequest) {
     // Handle callback_query presses (e.g., user tapped button again)
     const callback = update?.callback_query
     if (callback) {
-      await sendWelcome(callback.message?.chat.id || callback.from.id)
+      const chatId = callback.message?.chat.id || callback.from.id
+      const data = callback.data
+      try {
+        // acknowledge to stop spinner
+        await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ callback_query_id: callback.id })
+        })
+      } catch {}
+      if (data === 'rules') {
+        const rules = [
+          '<b>Правила игры Labubu Roulette</b>',
+          '',
+          '• Стоимость спина: 120₽ (обычный) / 199₽ (премиум, x2 шанс на части).',
+          '• На колесе 12 секторов: 4 части обычные, 4 части эксклюзив, и ЛАБУ.',
+          '• Дубликаты частей автоматически обмениваются на <b>200 ЛАБУ</b>.',
+          '• ЛАБУ — внутренняя валюта, не выводится, копится в профиле.',
+          '',
+          '<b>Как получить приз</b>',
+          '1) Собери 4 разные части — игрушка Labubu (авто-зачёт).',
+          '2) Накопи ЛАБУ и обменяй в магазине.',
+          '',
+          '<b>Курсы обмена</b>',
+          '• Обычный Labubu — 50 000 ЛАБУ (~7 500₽).',
+          '• Эксклюзивный Labubu — 150 000 ЛАБУ (~20 000₽).',
+          '',
+          '<b>Реферальные бонусы</b>',
+          '• Регистрируется по твоему коду: +500 ЛАБУ.',
+          '• Делает 1 спин: +1000 ЛАБУ.',
+          '• Делает 10 спинов суммарно: +2500 ЛАБУ.',
+          '• Собирает 4 части: +3000 ЛАБУ.',
+          '',
+          'Шансы выпадения и логика определения приза считаются на сервере. Все спины и балансы сохраняются.',
+          '',
+          'Поддержка: @pavel_xdev'
+        ].join('\n')
+        const form = new FormData()
+        form.set('chat_id', String(chatId))
+        form.set('text', rules)
+        form.set('parse_mode', 'HTML')
+        const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', body: form as any })
+        const bodyText = await tgRes.text().catch(() => '')
+        if (!tgRes.ok) console.error('Telegram sendMessage rules failed', tgRes.status, bodyText)
+      } else {
+        await sendWelcome(chatId)
+      }
     }
     // Some clients send my_chat_member when user starts chat; reply to greet anyway
     const membership = update?.my_chat_member
