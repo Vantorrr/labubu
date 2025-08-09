@@ -361,8 +361,9 @@ export default function Roulette() {
           <div 
             ref={wheelRef}
             className="rounded-full relative transition-transform duration-[4000ms] ease-out border-4 border-yellow-400 shadow-2xl"
-            style={{ width: 'min(96vw, 36rem)', height: 'min(96vw, 36rem)' }}
             style={{
+              width: 'min(96vw, 36rem)',
+              height: 'min(96vw, 36rem)',
               background: prizes.length > 0 ? `conic-gradient(
                 ${prizes.map((prize, index) => {
                   const startAngle = (index / prizes.length) * 360
