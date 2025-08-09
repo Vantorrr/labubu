@@ -612,25 +612,11 @@ export default function Roulette() {
               <span>🔥</span>
               <span>Премиум спин: x2 шанс на части!</span>
             </p>
-            <p className="flex items-center justify-center space-x-2">
-              <span>✨</span>
-              <span>20 секторов, больше шансов!</span>
-            </p>
+            {/* Убрали лишнюю строку про количество секторов */}
           </div>
         </div>
 
-        {/* Быстрые действия для мобильных */}
-        <div className="flex flex-wrap gap-2 justify-center sm:hidden">
-          <button className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm">
-            💰 Пополнить
-          </button>
-          <button className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm">
-            🏆 Мои призы
-          </button>
-          <button className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm">
-            📊 Статистика
-          </button>
-        </div>
+        {/* Убрали быстрые действия под рулеткой */}
       </div>
 
 
@@ -725,11 +711,7 @@ export default function Roulette() {
                   Продолжить игру
                 </button>
                 
-                {selectedPrize.rawValue > 0 && (
-                  <button className="flex-1 bg-white border-2 border-purple-500 text-purple-600 px-6 py-3 rounded-full font-bold hover:bg-purple-50 transition-all">
-                    Связаться
-                  </button>
-                )}
+                {/* Кнопку "Связаться" убрали по требованию */}
               </div>
             </div>
           </motion.div>
