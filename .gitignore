@@ -1,0 +1,10 @@
+/node_modules
+/.next
+/out
+.env
+.env.*
+/.vercel
+/.railway
+/prisma/dev.db
+/prisma/*.db-journal
+/.DS_Store

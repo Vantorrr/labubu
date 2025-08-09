@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wheel Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 50px auto;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            border: 4px solid gold;
+            overflow: hidden;
+        }
+        .sector {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            left: 50%;
+            top: 0;
+            transform-origin: 0 100%;
+        }
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 30px solid yellow;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #333;
+            border-radius: 10px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Отладка колеса рулетки</h1>
+    
+    <div class="wheel-container">
+        <div class="wheel" id="wheel"></div>
+        <div class="pointer"></div>
+    </div>
+    
+    <div class="info">
+        <h3>Тестирование вращения</h3>
+        <label>Индекс приза (0-11): <input type="number" id="prizeIndex" value="10" min="0" max="11"></label>
+        <button onclick="testRotation()">Тест вращения</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const prizes = [
+            "+5000 ЛАБУ", "Часть 1 — Экс", "Часть 2 — Экс", "Часть 3 — Экс",
+            "Часть 4 — Экс", "Часть 1 — Обыч", "Часть 2 — Обыч", "Часть 3 — Обыч",
+            "Часть 4 — Обыч", "+1000 ЛАБУ (повтор)", "+1000 ЛАБУ", "+500 ЛАБУ"
+        ];
+        
+        const colors = [
+            "#ff0000", "#ff6b6b", "#ff9999", "#ffcccc",
+            "#6b6bff", "#00ff00", "#00cc00", "#009900",
+            "#006600", "#ffaa00", "#ff8800", "#ff6600"
+        ];
+        
+        // Рисуем колесо
+        const wheel = document.getElementById('wheel');
+        prizes.forEach((prize, index) => {
+            const sector = document.createElement('div');
+            sector.className = 'sector';
+            sector.style.transform = `rotate(${index * 30}deg)`;
+            sector.style.background = `conic-gradient(from 0deg, ${colors[index]} 0deg 30deg, transparent 30deg)`;
+            
+            const label = document.createElement('div');
+            label.style.position = 'absolute';
+            label.style.transform = 'rotate(15deg) translateY(30px)';
+            label.style.fontSize = '10px';
+            label.style.fontWeight = 'bold';
+            label.textContent = prize;
+            
+            sector.appendChild(label);
+            wheel.appendChild(sector);
+        });
+        
+        function testRotation() {
+            const prizeIndex = parseInt(document.getElementById('prizeIndex').value);
+            const sectorAngle = 30; // 360/12
+            const prizeAngle = prizeIndex * sectorAngle + sectorAngle / 2;
+            const rotationToTop = 360 - prizeAngle;
+            const finalRotation = 5 * 360 + rotationToTop;
+            
+            wheel.style.transition = 'transform 4s ease-out';
+            wheel.style.transform = `rotate(${finalRotation}deg)`;
+            
+            document.getElementById('result').innerHTML = `
+                <strong>Приз:</strong> ${prizes[prizeIndex]} (индекс ${prizeIndex})<br>
+                <strong>Угол приза:</strong> ${prizeAngle}°<br>
+                <strong>Поворот:</strong> ${finalRotation}° (${finalRotation % 360}° остаток)<br>
+                <strong>Формула:</strong> 5 * 360 + (360 - ${prizeAngle}) = ${finalRotation}
+            `;
+        }
+    </script>
+</body>
+</html>

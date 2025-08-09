@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  name          String?
+  sessionId     String   @unique
+  telegramId    String?  @unique
+  labuBalance   Int      @default(0) // Баланс ЛАБУ
+  
+  // Реферальная система
+  referralCode  String   @unique @default(cuid()) // Уникальный промокод пользователя
+  referredById  String?  // Кто пригласил этого пользователя
+  referralEarnings Int   @default(0) // Сколько ЛАБУ заработал с рефералов
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  spins      Spin[]
+  wins       Win[]
+  collection UserCollection[]
+  purchases  Purchase[]
+  
+  // Реферальные связи
+  referredBy User? @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals  User[] @relation("UserReferrals")
+  
+  // Реферальные бонусы
+  referralBonuses ReferralBonus[]
+
+  @@map("users")
+}
+
+model Prize {
+  id        String @id @default(cuid())
+  name      String @unique
+  value     Int    // стоимость в копейках
+  chance    Float  // шанс в процентах (0-100)
+  rarity    String // common, rare, epic, legendary
+  color     String
+  icon      String
+  isActive  Boolean @default(true)
+  prizeType String // 'part', 'labu', 'empty'
+  partType  String? // 'part1', 'part2', 'part3', 'part4' (если это часть)
+  partRarity String? // 'normal', 'exclusive' (если это часть)
+  labuAmount Int? // количество ЛАБУ (если это валюта)
+
+  wins Win[]
+
+  @@map("prizes")
+}
+
+model Spin {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int      // стоимость спина в копейках
+  timestamp DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id])
+  win  Win?
+
+  @@map("spins")
+}
+
+model Win {
+  id        String   @id @default(cuid())
+  spinId    String   @unique
+  userId    String
+  prizeId   String
+  verified  Boolean  @default(false)
+  claimed   Boolean  @default(false)
+  timestamp DateTime @default(now())
+
+  spin  Spin  @relation(fields: [spinId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  prize Prize @relation(fields: [prizeId], references: [id])
+
+  @@map("wins")
+}
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@map("settings")
+}
+
+// Коллекция частей пользователя
+model UserCollection {
+  id         String @id @default(cuid())
+  userId     String
+  partType   String // 'part1', 'part2', 'part3', 'part4'
+  partRarity String // 'normal', 'exclusive'
+  quantity   Int    @default(1) // количество дубликатов
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, partType, partRarity])
+  @@map("user_collections")
+}
+
+// Магазин предметов
+model ShopItem {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  labuCost    Int // стоимость в ЛАБУ
+  realValue   Int // реальная стоимость в копейках
+  category    String // 'labubu_normal', 'labubu_exclusive', 'bonus'
+  isActive    Boolean @default(true)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  purchases Purchase[]
+
+  @@map("shop_items")
+}
+
+// Покупки в магазине
+model Purchase {
+  id         String @id @default(cuid())
+  userId     String
+  itemId     String
+  labuSpent  Int
+  status     String @default("pending") // pending, completed, cancelled
+  deliveryInfo String?
+  createdAt  DateTime @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+  item ShopItem @relation(fields: [itemId], references: [id])
+
+  @@map("purchases")
+}
+
+// Транзакции ЛАБУ
+model LabuTransaction {
+  id          String @id @default(cuid())
+  userId      String
+  amount      Int // положительное - пополнение, отрицательное - трата
+  type        String // 'spin_reward', 'shop_purchase', 'duplicate_exchange', 'referral_bonus'
+  description String?
+  relatedId   String? // ID связанной операции (спин, покупка и т.д.)
+  createdAt   DateTime @default(now())
+
+  @@map("labu_transactions")
+}
+
+// Реферальные бонусы
+model ReferralBonus {
+  id          String @id @default(cuid())
+  userId      String // Кто получает бонус (реферер)
+  referralId  String // За кого получает бонус (реферал)
+  action      String // 'registration', 'first_spin', 'tenth_spin', 'completed_collection'
+  amount      Int    // Сколько ЛАБУ получил
+  createdAt   DateTime @default(now())
+
+  user     User @relation(fields: [userId], references: [id])
+
+  @@map("referral_bonuses")
+}
