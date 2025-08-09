@@ -525,10 +525,7 @@ export default function Roulette() {
       {/* Кнопки спина - обновленные цены */}
       <div className="flex flex-col items-center space-y-4 px-4">
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
-          {/* Оплата Stars (временный блок для теста) */}
-          <div className="w-full max-w-lg">
-            <PayButtons onPaid={(type) => spinWheel(type)} />
-          </div>
+          {/* Оплата Stars — скрыто */}
 
           {/* Обычный спин */}
           <motion.button
