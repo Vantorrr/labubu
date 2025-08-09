@@ -18,7 +18,16 @@ export async function POST(req: NextRequest) {
     // Only react to /start
     const msg = update?.message
     const text: string | undefined = msg?.text
-    if (msg && text && text.startsWith('/start')) {
+    const entities: any[] | undefined = msg?.entities
+    const hasStartEntity = !!entities?.some(e => {
+      try {
+        if (e.type !== 'bot_command') return false
+        const cmd = text?.substring(e.offset, e.offset + e.length)
+        return cmd === '/start'
+      } catch { return false }
+    })
+    // Для надёжности шлём привет на любой первый месседж, и точно на /start
+    if (msg && (hasStartEntity || (text && text.toLowerCase().startsWith('/start')) || text)) {
       const chatId = msg.chat.id
       const appUrl = getAppUrl(req)
       const photo = 'https://i.ibb.co/CtBz5Mq/1JdGFT5X.png'
