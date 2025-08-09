@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt, FaVolumeUp, FaVolumeMute } from 'react-icons/fa'
+import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt, FaVolumeUp, FaVolumeMute, FaMusic } from 'react-icons/fa'
 import { GiDiamonds } from 'react-icons/gi'
 import { useRouter } from 'next/navigation'
 import { useTelegram } from '@/components/TelegramProvider'
