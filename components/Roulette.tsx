@@ -423,7 +423,7 @@ export default function Roulette() {
           if (sfxOn) playWin()
           toast.success(`🎁 Поздравляем! ${wonPrize.name}!`)
         } else if (wonPrize.name !== 'Попробуй еще!') {
-          if (audioOn) playWin()
+          if (sfxOn) playWin()
           toast.success(`${wonPrize.name}!`)
         } else {
           if (sfxOn) playLose()
