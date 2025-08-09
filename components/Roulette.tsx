@@ -315,8 +315,8 @@ export default function Roulette() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-20">
-      <div className="flex flex-col items-center space-y-8 p-4 w-full max-w-none">
+    <div className="min-h-[var(--tg-vh)] bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-20">
+      <div className="flex flex-col items-center space-y-8 p-4 w-full">
         {/* Заголовок */}
         <div className="w-full relative pt-4">
 
@@ -360,7 +360,8 @@ export default function Roulette() {
         <div className="roulette-glow rounded-full p-2 sm:p-4 bg-white/10 backdrop-blur-sm">
           <div 
             ref={wheelRef}
-            className="w-80 h-80 sm:w-[28rem] sm:h-[28rem] lg:w-[32rem] lg:h-[32rem] rounded-full relative transition-transform duration-[4000ms] ease-out border-4 border-yellow-400 shadow-2xl"
+            className="rounded-full relative transition-transform duration-[4000ms] ease-out border-4 border-yellow-400 shadow-2xl"
+            style={{ width: 'min(96vw, 36rem)', height: 'min(96vw, 36rem)' }}
             style={{
               background: prizes.length > 0 ? `conic-gradient(
                 ${prizes.map((prize, index) => {

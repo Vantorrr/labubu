@@ -37,6 +37,14 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
       if (isInTelegram) {
         const tg = setupTelegramWebApp()
         try { tg?.expand() } catch {}
+
+        // Обновляем переменную высоты для корректного fullscreen в iOS/Telegram
+        const updateVh = () => {
+          const height = tg?.viewportStableHeight || window.innerHeight
+          document.documentElement.style.setProperty('--tg-vh', `${height}px`)
+        }
+        updateVh()
+        try { tg?.onEvent('viewportChanged', updateVh) } catch {}
         setWebApp(tg)
         
         const telegramUser = getTelegramUser()
@@ -58,9 +66,15 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
         }
         setUser(mockUser)
         console.log('🧪 Mock user for testing:', mockUser)
+
+        // Обновляем переменную для браузера
+        document.documentElement.style.setProperty('--tg-vh', `${window.innerHeight}px`)
       }
       
       setIsLoading(false)
+      return () => {
+        try { window.Telegram?.WebApp?.offEvent('viewportChanged', () => {}) } catch {}
+      }
     }
 
     // Ждем загрузки Telegram WebApp скрипта
