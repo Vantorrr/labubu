@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         form.set('text', rules)
         form.set('parse_mode', 'HTML')
         // Клавиатура с кнопкой назад в главное меню
-        const backKb = { inline_keyboard: [[[{ text: '⬅️ Главное меню', callback_data: 'home' }]]] }
+        const backKb = { inline_keyboard: [[{ text: '⬅️ Главное меню', callback_data: 'home' }]] }
         form.set('reply_markup', JSON.stringify(backKb))
         const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', body: form as any })
         const bodyText = await tgRes.text().catch(() => '')
