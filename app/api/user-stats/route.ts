@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const normalCollection = { part1: 0, part2: 0, part3: 0, part4: 0 }
     const collectibleCollection = { part1: 0, part2: 0, part3: 0, part4: 0 }
 
-    user.collection.forEach(item => {
+    user!.collection.forEach(item => {
       if (item.partRarity === 'normal') {
         // @ts-ignore безопасно, так как partType хранится как 'part1'..'part4'
         normalCollection[item.partType] = item.quantity
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        labuBalance: user.labuBalance,
-        totalSpins: user.spins.length,
+        labuBalance: user!.labuBalance,
+        totalSpins: user!.spins.length,
         normalCollection,
         collectibleCollection
       }
