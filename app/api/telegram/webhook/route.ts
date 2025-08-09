@@ -94,10 +94,6 @@ export async function POST(req: NextRequest) {
           '1) Собери 4 разные части — игрушка Labubu (авто-зачёт).',
           '2) Накопи ЛАБУ и обменяй в магазине.',
           '',
-          '<b>Курсы обмена</b>',
-          '• Обычный Labubu — 50 000 ЛАБУ (~7 500₽).',
-          '• Эксклюзивный Labubu — 150 000 ЛАБУ (~20 000₽).',
-          '',
           '<b>Реферальные бонусы</b>',
           '• Регистрируется по твоему коду: +500 ЛАБУ.',
           '• Делает 1 спин: +1000 ЛАБУ.',
@@ -112,9 +108,14 @@ export async function POST(req: NextRequest) {
         form.set('chat_id', String(chatId))
         form.set('text', rules)
         form.set('parse_mode', 'HTML')
+        // Клавиатура с кнопкой назад в главное меню
+        const backKb = { inline_keyboard: [[[{ text: '⬅️ Главное меню', callback_data: 'home' }]]] }
+        form.set('reply_markup', JSON.stringify(backKb))
         const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', body: form as any })
         const bodyText = await tgRes.text().catch(() => '')
         if (!tgRes.ok) console.error('Telegram sendMessage rules failed', tgRes.status, bodyText)
+      } else if (data === 'home') {
+        await sendWelcome(chatId)
       } else {
         await sendWelcome(chatId)
       }
