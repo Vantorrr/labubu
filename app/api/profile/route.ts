@@ -48,6 +48,14 @@ export async function POST(request: NextRequest) {
     const totalWins = user.spins.filter(spin => spin.win).length
     const winRate = totalSpins > 0 ? Math.round((totalWins / totalSpins) * 100) : 0
 
+    // Для определения типа спина по сумме
+    const [spinCostSetting, premiumCostSetting] = await Promise.all([
+      prisma.settings.findUnique({ where: { key: 'spin_cost' } }),
+      prisma.settings.findUnique({ where: { key: 'premium_spin_cost' } }),
+    ])
+    const normalCost = parseInt(spinCostSetting?.value || '12000')
+    const premiumCost = parseInt(premiumCostSetting?.value || '19900')
+
     // Получаем последние спины с подробностями
     const recentSpins = await Promise.all(
       user.spins.slice(0, 20).map(async (spin) => {
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
           id: spin.id,
           timestamp: spin.timestamp,
           cost: spin.amount,
-          spinType: spin.spinType,
+          spinType: spin.amount === premiumCost ? 'premium' : 'normal',
           prize: prizeDetails,
           win: spin.win
         }
