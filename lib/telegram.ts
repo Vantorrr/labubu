@@ -1,8 +1,11 @@
-// Telegram Bot Configuration
+// Telegram Bot Configuration (server-side reads from env)
 export const TELEGRAM_CONFIG = {
-  BOT_TOKEN: '8287050230:AAFhn4ZzVo4x2trRatzSwj8m5RCxxTML65I',
-  WEBHOOK_URL: 'https://your-domain.com/api/telegram/webhook',
-  API_URL: 'https://api.telegram.org/bot'
+  get BOT_TOKEN() {
+    return process.env.TELEGRAM_BOT_TOKEN || ''
+  },
+  get API_URL() {
+    return 'https://api.telegram.org/bot'
+  }
 }
 
 // Telegram WebApp Script
