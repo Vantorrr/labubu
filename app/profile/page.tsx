@@ -86,7 +86,8 @@ export default function ProfilePage() {
   const { user: telegramUser } = useTelegram()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'stats' | 'settings' | 'history' | 'transactions' | 'referrals'>('stats')
+  // добавил 'collection' чтобы не ругался TS, даже если вкладка сейчас не используется
+  const [activeTab, setActiveTab] = useState<'stats' | 'settings' | 'history' | 'transactions' | 'referrals' | 'collection'>('stats')
   const [showReferralModal, setShowReferralModal] = useState(false)
   const [referralCode, setReferralCode] = useState('')
 
