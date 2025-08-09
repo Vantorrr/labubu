@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Обрабатываем приз
-    let prizeResult = {
+    let prizeResult: any = {
       type: wonPrize.prizeType,
       name: wonPrize.name,
       id: wonPrize.id,
