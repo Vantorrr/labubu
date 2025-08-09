@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt } from 'react-icons/fa'
+import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt, FaVolumeUp, FaVolumeMute } from 'react-icons/fa'
 import { GiDiamonds } from 'react-icons/gi'
 import { useRouter } from 'next/navigation'
 import { useTelegram } from '@/components/TelegramProvider'
@@ -99,6 +99,91 @@ export default function Roulette() {
   const wheelRef = useRef<HTMLDivElement>(null)
   // Копим абсолютный угол поворота, чтобы всегда крутить в одну сторону
   const rotationRef = useRef<number>(0)
+  // Аудио
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const [audioOn, setAudioOn] = useState<boolean>(false)
+  const bgmIntervalRef = useRef<any>(null)
+  const tickIntervalRef = useRef<any>(null)
+
+  const ensureAudio = () => {
+    if (!audioOn) return null
+    if (!audioCtxRef.current) {
+      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (!AC) return null
+      audioCtxRef.current = new AC()
+    }
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {})
+    }
+    return audioCtxRef.current
+  }
+
+  const playTone = (frequency: number, durationMs: number, type: OscillatorType = 'sine', volume = 0.03) => {
+    const ctx = ensureAudio()
+    if (!ctx) return
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = type
+    osc.frequency.value = frequency
+    gain.gain.value = 0
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    const now = ctx.currentTime
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000)
+    osc.start(now)
+    osc.stop(now + durationMs / 1000 + 0.05)
+  }
+
+  const playTick = () => playTone(1200, 40, 'square', 0.02)
+  const playStart = () => {
+    const ctx = ensureAudio()
+    if (!ctx) return
+    // короткий свип
+    playTone(300, 120, 'sawtooth', 0.03)
+    setTimeout(() => playTone(600, 120, 'sawtooth', 0.025), 90)
+    setTimeout(() => playTone(900, 120, 'sawtooth', 0.02), 180)
+  }
+  const playWin = () => {
+    playTone(880, 180, 'triangle', 0.035)
+    setTimeout(() => playTone(1175, 220, 'triangle', 0.03), 120)
+    setTimeout(() => playTone(1568, 260, 'triangle', 0.03), 260)
+  }
+  const playLose = () => playTone(220, 220, 'sine', 0.03)
+
+  const startBgm = () => {
+    stopBgm()
+    const ctx = ensureAudio()
+    if (!ctx) return
+    // мягкие пэды: периодически играем ноту
+    bgmIntervalRef.current = setInterval(() => {
+      playTone(392, 300, 'sine', 0.01)
+      setTimeout(() => playTone(523.25, 300, 'sine', 0.01), 300)
+      setTimeout(() => playTone(659.25, 300, 'sine', 0.01), 600)
+    }, 2400)
+  }
+  const stopBgm = () => {
+    if (bgmIntervalRef.current) {
+      clearInterval(bgmIntervalRef.current)
+      bgmIntervalRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem('audio_on')
+    if (saved === '1') setAudioOn(true)
+  }, [])
+
+  useEffect(() => {
+    if (audioOn) {
+      localStorage.setItem('audio_on', '1')
+      startBgm()
+    } else {
+      localStorage.setItem('audio_on', '0')
+      stopBgm()
+    }
+    return () => stopBgm()
+  }, [audioOn])
 
   // Функция загрузки призов и статистики пользователя
   const loadPrizesAndStats = async (sessionId: string) => {
@@ -171,6 +256,7 @@ export default function Roulette() {
     if (isSpinning || !userId) return
 
     setIsSpinning(true)
+    if (audioOn) playStart()
     
     // Тактильная обратная связь для Telegram
     if (isTelegramApp && webApp?.HapticFeedback) {
@@ -250,6 +336,22 @@ export default function Roulette() {
       }
 
       // Ждем окончания анимации
+      // Во время анимации — тики
+      if (audioOn) {
+        let elapsed = 0
+        const duration = 4000
+        const interval = 120
+        tickIntervalRef.current = setInterval(() => {
+          elapsed += interval
+          if (elapsed >= duration) {
+            clearInterval(tickIntervalRef.current)
+            tickIntervalRef.current = null
+          } else {
+            playTick()
+          }
+        }, interval)
+      }
+
       setTimeout(() => {
         setSelectedPrize(wonPrize)
         setIsSpinning(false)
@@ -274,6 +376,7 @@ export default function Roulette() {
 
         // Показываем результат с учетом дубликатов
         if (data.prizeResult?.isDuplicate) {
+          if (audioOn) playLose()
           toast(`😕 Дубликат! +300 ЛАБУ за ${wonPrize.name}`, {
             duration: 4000,
             style: {
@@ -284,16 +387,21 @@ export default function Roulette() {
             },
           })
         } else if (wonPrize.rarity === 'legendary') {
+          if (audioOn) playWin()
           toast.success('🎉 НЕВЕРОЯТНО! ТЫ ВЫИГРАЛ ЛУЧШИЙ ПРИЗ! 🎉', {
             duration: 8000,
           })
         } else if (wonPrize.rarity === 'epic') {
+          if (audioOn) playWin()
           toast.success(`✨ Отлично! Ты выиграл: ${wonPrize.name}! ✨`)
         } else if (wonPrize.rarity === 'rare') {
+          if (audioOn) playWin()
           toast.success(`🎁 Поздравляем! ${wonPrize.name}!`)
         } else if (wonPrize.name !== 'Попробуй еще!') {
+          if (audioOn) playWin()
           toast.success(`${wonPrize.name}!`)
         } else {
+          if (audioOn) playLose()
           toast('Не повезло... Попробуй еще раз! 💪')
         }
       }, 4000)
@@ -325,6 +433,14 @@ export default function Roulette() {
           <h1 className="text-4xl sm:text-6xl font-bold gradient-text mb-4">
             🎊 LABUBU РУЛЕТКА 🎊
           </h1>
+          {/* Переключатель звука */}
+          <button
+            onClick={() => setAudioOn(v => !v)}
+            className="absolute right-4 top-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full"
+            aria-label="Звук"
+          >
+            {audioOn ? <FaVolumeUp /> : <FaVolumeMute />}
+          </button>
           {/* Приветствие Telegram пользователя */}
           {telegramUser && (
             <div className="mb-2">
