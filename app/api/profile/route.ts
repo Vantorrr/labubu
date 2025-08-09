@@ -22,11 +22,7 @@ export async function POST(request: NextRequest) {
             timestamp: 'desc'
           }
         },
-        labuTransactions: {
-          orderBy: {
-            createdAt: 'desc'
-          }
-        }
+        labuTransactions: true
       }
     })
 

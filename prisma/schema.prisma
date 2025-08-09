@@ -30,6 +30,7 @@ model User {
   wins       Win[]
   collection UserCollection[]
   purchases  Purchase[]
+  labuTransactions LabuTransaction[]
   
   // Реферальные связи
   referredBy User? @relation("UserReferrals", fields: [referredById], references: [id])
