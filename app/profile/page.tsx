@@ -115,7 +115,8 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true)
-      const sessionId = getUserId(telegramUser)
+       const sessionId = getUserId(telegramUser)
+       if (!sessionId) return
       
       const response = await fetch(`/api/profile?t=${Date.now()}`, {
         method: 'POST',
@@ -145,15 +146,16 @@ export default function ProfilePage() {
     })
   }
 
-  const formatCurrency = (amount: number) => {
-    return `${amount}₽`
+  const formatCurrency = (amountInCents: number) => {
+    const rub = (amountInCents || 0) / 100
+    return `${rub.toLocaleString('ru-RU')}₽`
   }
 
   const loadReferralStats = async () => {
     try {
       const sessionId = getUserId(telegramUser)
       
-      const response = await fetch('/api/referral/stats', {
+       const response = await fetch('/api/referral/stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId })

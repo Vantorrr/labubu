@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
 
     // Считаем статистику
     const totalSpins = user.spins.length
-    const totalSpent = user.spins.reduce((sum, spin) => sum + spin.amount, 0)
+    // amount хранится в копейках; просто суммируем
+    const totalSpent = user.spins.reduce((sum, spin) => sum + (spin.amount || 0), 0)
     const totalWins = user.spins.filter(spin => spin.win).length
     const winRate = totalSpins > 0 ? Math.round((totalWins / totalSpins) * 100) : 0
 

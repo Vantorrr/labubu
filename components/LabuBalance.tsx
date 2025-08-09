@@ -27,7 +27,8 @@ export default function LabuBalance({
 
       const loadBalance = async () => {
       try {
-        const userId = getUserId(telegramUser)
+  const userId = getUserId(telegramUser)
+  if (!userId) return null
       
       const response = await fetch('/api/user-stats', {
         method: 'POST',
