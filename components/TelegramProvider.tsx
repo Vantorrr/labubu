@@ -36,6 +36,7 @@ export function TelegramProvider({ children }: TelegramProviderProps) {
 
       if (isInTelegram) {
         const tg = setupTelegramWebApp()
+        try { tg?.expand() } catch {}
         setWebApp(tg)
         
         const telegramUser = getTelegramUser()

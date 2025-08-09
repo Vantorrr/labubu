@@ -316,9 +316,9 @@ export default function Roulette() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pb-20">
-      <div className="flex flex-col items-center space-y-8 p-4">
+      <div className="flex flex-col items-center space-y-8 p-4 w-full max-w-none">
         {/* Заголовок */}
-        <div className="w-full max-w-6xl relative pt-4">
+        <div className="w-full relative pt-4">
 
         {/* Статистика пользователя */}
         <div className="text-center">
