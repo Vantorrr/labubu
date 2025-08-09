@@ -369,7 +369,7 @@ export default function ProfilePage() {
           )}
 
           {/* Collection Tab */}
-          {activeTab === 'collection' && (
+          {activeTab === 'collection' ? (
             <div className="space-y-6">
               {/* Normal Collection */}
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
@@ -497,7 +497,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Referrals Tab */}
           {activeTab === 'referrals' && (
