@@ -43,38 +43,56 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Получаем все активные призы
+    // Получаем все активные призы (только реальные призы, без "пусто")
     const prizes = await prisma.prize.findMany({
       where: { isActive: true },
       orderBy: { chance: 'asc' }
     })
 
-    // Применяем модификатор для премиум спина
+    // Применяем модификатор для премиум спина (только для частей)
     const modifiedPrizes = prizes.map(prize => ({
       ...prize,
-      chance: prize.prizeType === 'part' && spinType === 'premium' 
-        ? prize.chance * 2 // Удваиваем шанс на части
+      chance: prize.prizeType === 'part' && spinType === 'premium'
+        ? prize.chance * 2
         : prize.chance
     }))
 
-    // Нормализуем шансы
+    // Сумма шансов реальных призов (без "пусто"). Остаток — это шанс промаха
     const totalChance = modifiedPrizes.reduce((sum, p) => sum + p.chance, 0)
-    const normalizedPrizes = modifiedPrizes.map(p => ({
-      ...p,
-      chance: (p.chance / totalChance) * 100
-    }))
+    const missChance = Math.max(0, 100 - totalChance)
 
-    // Определяем выигрыш
+    // Обеспечим наличие специального приза "пусто" для записи результата
+    let emptyPrize = await prisma.prize.findFirst({ where: { prizeType: 'empty' } })
+    if (!emptyPrize) {
+      emptyPrize = await prisma.prize.create({
+        data: {
+          name: 'Попробуй еще!',
+          value: 0,
+          chance: 0, // реальный шанс считается динамически (missChance)
+          rarity: 'common',
+          color: '#6b7280',
+          icon: 'FaTimes',
+          isActive: false, // не показываем в списках призов
+          prizeType: 'empty'
+        }
+      })
+    }
+
+    // Розыгрыш по "сырым" шансам (0-100) с учетом промаха
     const random = Math.random() * 100
     let accumulatedChance = 0
-    let wonPrize = normalizedPrizes[0] // fallback
+    let wonPrize = emptyPrize
 
-    for (const prize of normalizedPrizes) {
+    for (const prize of modifiedPrizes) {
       accumulatedChance += prize.chance
       if (random <= accumulatedChance) {
         wonPrize = prize
         break
       }
+    }
+    // Если не попали ни в один приз — промах
+    if (random > accumulatedChance && missChance > 0) {
+      wonPrize = emptyPrize
     }
 
     // Обрабатываем приз
@@ -161,26 +179,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Если это ЛАБУ
-    if (wonPrize.prizeType === 'labu' && wonPrize.labuAmount) {
+    if (wonPrize.prizeType === 'labu' && (wonPrize as any).labuAmount) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { labuBalance: { increment: wonPrize.labuAmount } }
+        data: { labuBalance: { increment: (wonPrize as any).labuAmount } }
       })
 
       // Создаем транзакцию ЛАБУ
       await prisma.labuTransaction.create({
         data: {
           userId: user.id,
-          amount: wonPrize.labuAmount,
+        amount: (wonPrize as any).labuAmount,
           type: 'spin_reward',
-          description: `Получено ${wonPrize.labuAmount} ЛАБУ за спин`,
+        description: `Получено ${(wonPrize as any).labuAmount} ЛАБУ за спин`,
           relatedId: spin.id
         }
       })
 
       prizeResult = {
         ...prizeResult,
-        labuAmount: wonPrize.labuAmount
+        labuAmount: (wonPrize as any).labuAmount
       }
     }
 

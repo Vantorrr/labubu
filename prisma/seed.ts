@@ -176,18 +176,34 @@ async function main() {
   console.log(`🎯 Итого секторов с призами: ${prizes.length} (12 секторов)`)
   console.log(`🕳️ Пустых секторов: ${100 - totalChance}%`)
 
-  // Очищаем старые призы
-  await prisma.prize.deleteMany()
-  console.log('🗑️ Старые призы удалены')
+  // Деактивируем все старые призы (без удаления, чтобы не ломать внешние ключи)
+  await prisma.prize.updateMany({
+    where: { prizeType: { not: 'empty' } },
+    data: { isActive: false }
+  })
+  console.log('🛑 Старые призы деактивированы')
 
-  // Создаем новые призы
+  // Обновляем/создаем призы (upsert по уникальному name)
   for (const prize of prizes) {
-    await prisma.prize.create({
-      data: prize
+    await prisma.prize.upsert({
+      where: { name: prize.name },
+      update: {
+        value: prize.value,
+        chance: prize.chance,
+        rarity: prize.rarity,
+        color: prize.color,
+        icon: prize.icon,
+        isActive: true,
+        prizeType: prize.prizeType,
+        partType: prize.partType as any,
+        partRarity: prize.partRarity as any,
+        labuAmount: prize.labuAmount as any
+      },
+      create: prize as any
     })
   }
 
-  console.log('🎁 Новые 12 призов созданы!')
+  console.log('🎁 Призы обновлены (upsert) и активированы!')
 
   // Создаем настройки (ПРОФИТНЫЕ ЦЕНЫ!)
   const settings = [

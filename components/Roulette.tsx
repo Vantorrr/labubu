@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt, FaVolumeUp, FaVolumeMute } from 'react-icons/fa'
+import { FaGift, FaCrown, FaStar, FaCoins, FaTimes, FaDice, FaKey, FaCoffee, FaTshirt, FaBox, FaBaby, FaGem, FaUser, FaHandPaper, FaShoePrints, FaMagic, FaFire, FaMoneyBillWave, FaSadTear, FaRedo, FaHandPointUp, FaArrowRight, FaCalendarTimes, FaCircle, FaUserAlt } from 'react-icons/fa'
 import { GiDiamonds } from 'react-icons/gi'
 import { useRouter } from 'next/navigation'
 import { useTelegram } from '@/components/TelegramProvider'
@@ -458,17 +458,7 @@ export default function Roulette() {
           <h1 className="text-4xl sm:text-6xl font-bold gradient-text mb-4">
             🎊 LABUBU РУЛЕТКА 🎊
           </h1>
-          {/* Переключатели звуков */}
-          <div className="absolute right-3 top-3">
-            <button
-              onClick={() => setSfxOn(v => !v)}
-              className={`backdrop-blur bg-black/30 hover:bg-black/40 text-white p-2 rounded-full shadow-lg border border-white/20`}
-              aria-label="Звук"
-              style={{ transform: 'scale(1.1)' }}
-            >
-              {sfxOn ? <FaVolumeUp size={18} /> : <FaVolumeMute size={18} />}
-            </button>
-          </div>
+          {/* Настройки звука перенесены в Профиль → Настройки */}
           {/* Приветствие Telegram пользователя */}
           {telegramUser && (
             <div className="mb-2">

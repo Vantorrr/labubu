@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { FaCoins, FaGift, FaCrown, FaChartLine, FaClock, FaMoneyBillWave, FaUser, FaTshirt, FaHandPaper, FaShoePrints, FaGem, FaMagic, FaFire, FaHistory, FaCalendarAlt, FaEdit, FaCamera, FaUsers, FaCopy, FaPlus } from 'react-icons/fa'
+import { FaCoins, FaGift, FaCrown, FaChartLine, FaClock, FaMoneyBillWave, FaUser, FaTshirt, FaHandPaper, FaShoePrints, FaGem, FaMagic, FaFire, FaHistory, FaCalendarAlt, FaEdit, FaCamera, FaUsers, FaCopy, FaPlus, FaVolumeUp, FaVolumeMute, FaMusic } from 'react-icons/fa'
 import { useTelegram } from '@/components/TelegramProvider'
 import { getUserId } from '@/utils/getUserId'
 import LabuBalance from '@/components/LabuBalance'
@@ -90,11 +90,18 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'stats' | 'settings' | 'history' | 'transactions' | 'referrals' | 'collection'>('stats')
   const [showReferralModal, setShowReferralModal] = useState(false)
   const [referralCode, setReferralCode] = useState('')
+  const [sfxOn, setSfxOn] = useState(false)
+  const [bgmOn, setBgmOn] = useState(false)
 
   useEffect(() => {
     // Устанавливаем флаг что приложение загружено
     localStorage.setItem('app_loaded', 'true')
     loadProfile()
+    // Инициализируем локальные настройки звука
+    const s = localStorage.getItem('sfx_on')
+    const b = localStorage.getItem('bgm_on')
+    if (s === '1') setSfxOn(true)
+    if (b === '1') setBgmOn(true)
     
     // Автообновление при возврате на вкладку/фокусе
     const onFocus = () => loadProfile()
@@ -105,6 +112,13 @@ export default function ProfilePage() {
       document.removeEventListener('visibilitychange', onFocus)
     }
   }, [telegramUser])
+  useEffect(() => {
+    localStorage.setItem('sfx_on', sfxOn ? '1' : '0')
+  }, [sfxOn])
+
+  useEffect(() => {
+    localStorage.setItem('bgm_on', bgmOn ? '1' : '0')
+  }, [bgmOn])
 
   useEffect(() => {
     if (activeTab === 'referrals' && profile && !profile.referralStats) {
@@ -365,6 +379,56 @@ export default function ProfilePage() {
                       -{profile.statistics.labuStats.spent.toLocaleString()}
                     </div>
                     <div className="text-white/70">Потрачено</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                <h3 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
+                  <FaUser className="text-blue-400" />
+                  Настройки
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      {sfxOn ? (
+                        <FaVolumeUp className="text-green-400 w-5 h-5" />
+                      ) : (
+                        <FaVolumeMute className="text-gray-400 w-5 h-5" />
+                      )}
+                      <div>
+                        <div className="text-white font-semibold">Звуки (SFX)</div>
+                        <div className="text-white/60 text-sm">Клики, выигрыш, эффекты рулетки</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSfxOn(v => !v)}
+                      className={`px-4 py-2 rounded-full font-semibold transition-colors ${sfxOn ? 'bg-green-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                    >
+                      {sfxOn ? 'Включено' : 'Выключено'}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <FaMusic className={`w-5 h-5 ${bgmOn ? 'text-yellow-300' : 'text-gray-400'}`} />
+                      <div>
+                        <div className="text-white font-semibold">Музыка</div>
+                        <div className="text-white/60 text-sm">Легкий фон во время игры</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setBgmOn(v => !v)}
+                      className={`px-4 py-2 rounded-full font-semibold transition-colors ${bgmOn ? 'bg-yellow-400 text-black' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                    >
+                      {bgmOn ? 'Включено' : 'Выключено'}
+                    </button>
                   </div>
                 </div>
               </div>
