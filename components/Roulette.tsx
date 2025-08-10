@@ -105,6 +105,7 @@ export default function Roulette() {
   const [bgmOn, setBgmOn] = useState<boolean>(false)
   const bgmIntervalRef = useRef<any>(null)
   const tickTimeoutsRef = useRef<any[]>([])
+  const spinWatchdogRef = useRef<any>(null)
 
   const ensureAudio = () => {
     if (!sfxOn && !bgmOn) return null
@@ -283,6 +284,14 @@ export default function Roulette() {
 
     setIsSpinning(true)
     if (sfxOn) playStart()
+    // Страховка от зависания: сбрасываем спин, если что-то пошло не так
+    if (spinWatchdogRef.current) clearTimeout(spinWatchdogRef.current)
+    spinWatchdogRef.current = setTimeout(() => {
+      setIsSpinning(false)
+      tickTimeoutsRef.current.forEach(clearTimeout)
+      tickTimeoutsRef.current = []
+      toast.error('Связь подвисла. Попробуй еще раз!')
+    }, 12000)
     
     // Тактильная обратная связь для Telegram
     if (isTelegramApp && webApp?.HapticFeedback) {
@@ -332,10 +341,34 @@ export default function Roulette() {
       }
 
       // Анимация колеса — детерминированная и кумулятивная
-      const prizeIndex = prizes.findIndex(p => p.id === data.prize.id)
-      
+      let prizeIndex = prizes.findIndex(p => p.id === data.prize.id)
+      // Если приз не найден в локальном списке — перезагрузим призы и попробуем еще раз
       if (prizeIndex === -1) {
-        console.error('Prize not found!')
+        try {
+          const prizesResponse = await fetch('/api/prizes', { cache: 'no-store' })
+          const prizesData = await prizesResponse.json()
+          if (prizesData?.success) {
+            const refreshed: Prize[] = prizesData.prizes.map((apiPrize: any) => ({
+              id: apiPrize.id,
+              name: apiPrize.name,
+              icon: iconMap[apiPrize.icon] || <FaGift />,
+              rarity: apiPrize.rarity,
+              color: apiPrize.color,
+              chance: apiPrize.chance,
+              value: apiPrize.prizeType === 'labu' ? `${apiPrize.labuAmount} ЛАБУ` : 
+                     apiPrize.prizeType === 'part' ? `Часть ${apiPrize.partRarity}` : '0₽',
+              rawValue: apiPrize.labuAmount || 0
+            }))
+            setPrizes(refreshed)
+            prizeIndex = refreshed.findIndex((p: Prize) => p.id === data.prize.id)
+          }
+        } catch {}
+      }
+      if (prizeIndex === -1) {
+        // Безопасно остановим спин и попросим попробовать ещё раз
+        setIsSpinning(false)
+        if (spinWatchdogRef.current) clearTimeout(spinWatchdogRef.current)
+        toast.error('Обновляем призы... Попробуй еще раз!')
         return
       }
 
@@ -373,13 +406,14 @@ export default function Roulette() {
           const id = setTimeout(() => playClick(), time)
           tickTimeoutsRef.current.push(id)
         }
-        const id = setTimeout(() => { tickTimeoutsRef.current.forEach(clearTimeout); tickTimeoutsRef.current = [] }, duration)
+        const id = setTimeout(() => { tickTimeoutsRef.current.forEach(clearTimeout); tickTimeoutsRef.current = [] }, duration + 100)
         tickTimeoutsRef.current.push(id)
       }
 
       setTimeout(() => {
         setSelectedPrize(wonPrize)
         setIsSpinning(false)
+        if (spinWatchdogRef.current) clearTimeout(spinWatchdogRef.current)
         setShowResult(true)
         setSpins(data.user.totalSpins)
 
@@ -434,6 +468,7 @@ export default function Roulette() {
     } catch (error) {
       console.error('Spin error:', error)
       setIsSpinning(false)
+      if (spinWatchdogRef.current) clearTimeout(spinWatchdogRef.current)
       toast.error('Произошла ошибка. Попробуйте еще раз!')
     }
   }
