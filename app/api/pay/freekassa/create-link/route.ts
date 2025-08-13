@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'amountRub and sessionId are required' }, { status: 400 })
     }
 
-    const merchantId = process.env.FK_MERCHANT_ID
-    const secret1 = process.env.FK_SECRET_1
+    const merchantId = (process.env.FK_MERCHANT_ID || '').trim()
+    const secret1 = (process.env.FK_SECRET_1 || '').trim()
 
     if (!merchantId || !secret1) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
@@ -25,11 +25,10 @@ export async function POST(req: NextRequest) {
 
     // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
     const signString = [merchantId, amount, secret1, oid].join(':')
-    const sign = md5(signString)
+    const sign = md5(signString).toUpperCase()
 
-    // Используем официальные домены платёжной формы (оба валидны по SCI)
-    // Выбираем pay.freekassa.ru для совместимости
-    const url = new URL('https://pay.freekassa.ru/')
+    // Используем официальный домен SCI. Если провайдер блокирует, FK рекомендует pay.fk.money
+    const url = new URL('https://pay.fk.money/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
     url.searchParams.set('o', oid)
