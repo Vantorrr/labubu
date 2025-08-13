@@ -25,7 +25,9 @@ export async function POST(req: NextRequest) {
     // Подпись для ссылки оплаты: md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
     const sign = md5([merchantId, amount, secret1, oid].join(':')).toUpperCase()
 
-    const url = new URL('https://pay.freekassa.ru/')
+    // Согласно SCI, платёжная форма отдается с домена pay.fk.money
+    // https://docs.freekassa.net (Раздел SCI → Настройка формы оплаты)
+    const url = new URL('https://pay.fk.money/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
     url.searchParams.set('o', oid)
