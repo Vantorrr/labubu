@@ -1,26 +1,30 @@
 'use client'
 
 import { useState } from 'react'
+import { getUserId } from '@/utils/getUserId'
+import { useTelegram } from '@/components/TelegramProvider'
 
 export default function PayButtons({ onPaid }: { onPaid: (type: 'normal' | 'premium') => void }) {
   const [loading, setLoading] = useState<'normal' | 'premium' | null>(null)
+  const { user: telegramUser } = useTelegram()
 
   const pay = async (spinType: 'normal' | 'premium') => {
     try {
       setLoading(spinType)
-      const res = await fetch('/api/pay/create-invoice', {
+      const sessionId = getUserId(telegramUser)
+      // переключаемся на FreeKassa
+      const product = spinType === 'premium' ? 'spins_10' : 'spins_10'
+      const amountRub = spinType === 'premium' ? 199 : 120
+      const res = await fetch('/api/pay/freekassa/create-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: localStorage.getItem('guestUserId'), spinType })
+        body: JSON.stringify({ amountRub, sessionId, product })
       })
       const data = await res.json()
       if (data.success && data.link) {
-        // Открываем оплату Stars в новом окне/вкладке (в мини‑аппе откроет нативно)
         window.open(data.link, '_blank')
-        // После оплаты вы можете подтверждать через webhook; пока — просто продолжаем
-        onPaid(spinType)
       } else {
-        alert('Ошибка создания платежа: ' + data.error)
+        alert('Ошибка создания ссылки: ' + data.error)
       }
     } finally {
       setLoading(null)
