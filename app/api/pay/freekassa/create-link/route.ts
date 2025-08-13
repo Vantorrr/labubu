@@ -22,11 +22,13 @@ export async function POST(req: NextRequest) {
     const amount = Number(amountRub).toFixed(2)
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
-    // Подпись для ссылки оплаты: md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
-    const sign = md5([merchantId, amount, secret1, oid].join(':')).toUpperCase()
+    // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
+    // В SCI регистрозависимости нет, передадим в нижнем регистре
+    const sign = md5([merchantId, amount, secret1, oid].join(':'))
 
     // Согласно SCI, платёжная форма отдается с домена pay.fk.money
     // https://docs.freekassa.net (Раздел SCI → Настройка формы оплаты)
+    // На части аккаунтов используется fmt.me. Оставим базу pay.fk.money.
     const url = new URL('https://pay.fk.money/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
