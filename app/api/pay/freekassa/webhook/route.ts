@@ -51,6 +51,12 @@ export async function POST(req: NextRequest) {
       } else if (product === 'labu_5000') {
         await prisma.user.update({ where: { id: user.id }, data: { labuBalance: { increment: 5000 } } })
         await prisma.labuTransaction.create({ data: { userId: user.id, amount: 5000, type: 'purchase', description: 'FreeKassa' } as any })
+      } else if (product === 'topup_rub') {
+        // Пополнение рублевого кошелька — amount приходит в рублях (дробное)
+        const rub = Math.round(parseFloat(amount || '0') * 100) // в копейках
+        if (rub > 0) {
+          await prisma.user.update({ where: { id: user.id }, data: { rubBalance: { increment: rub } } })
+        }
       }
     }
 

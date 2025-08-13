@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Roulette from '@/components/Roulette'
 import LoadingScreen from '@/components/LoadingScreen'
+import RubBalance from '@/components/RubBalance'
 
 export default function HomePage() {
   const [showLoading, setShowLoading] = useState(true)
@@ -26,6 +27,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen mobile-optimized">
+      <div className="p-4 flex justify-center"><RubBalance size="md" /></div>
       <Roulette />
     </div>
   )

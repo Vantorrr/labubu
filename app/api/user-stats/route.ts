@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: {
         labuBalance: user!.labuBalance,
+        rubBalance: user!.rubBalance,
         totalSpins: user!.spins.length,
         normalCollection,
         collectibleCollection

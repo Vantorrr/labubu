@@ -17,6 +17,7 @@ model User {
   sessionId     String   @unique
   telegramId    String?  @unique
   labuBalance   Int      @default(0) // Баланс ЛАБУ
+  rubBalance    Int      @default(0) // Баланс в рублях (в копейках)
   
   // Реферальная система
   referralCode  String   @unique @default(cuid()) // Уникальный промокод пользователя
