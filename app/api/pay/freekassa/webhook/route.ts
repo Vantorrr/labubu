@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     const params: Record<string, string> = {}
     body.forEach((v, k) => { params[k] = String(v) })
 
-    // Если это проверка статуса из личного кабинета (без параметров) — отвечаем 200
-    if (Object.keys(params).length === 0) {
+    // Если это проверка статуса из личного кабинета (без параметров или без подписи) — отвечаем 200
+    if (Object.keys(params).length === 0 || (!params['SIGN'] && !params['SIGNATURE'])) {
       return new NextResponse('OK', { status: 200 })
     }
 
