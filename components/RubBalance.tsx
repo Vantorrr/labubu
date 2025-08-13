@@ -10,7 +10,7 @@ interface RubBalanceProps {
 }
 
 export default function RubBalance({ className = '', size = 'md' }: RubBalanceProps) {
-  const { user: telegramUser } = useTelegram()
+  const { user: telegramUser, isTelegramApp, webApp } = useTelegram()
   const [rub, setRub] = useState(0)
   const [loading, setLoading] = useState(true)
 
@@ -50,7 +50,11 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
     })
     const data = await res.json()
     if (data.success && data.link) {
-      window.open(data.link, '_blank')
+      if (isTelegramApp && webApp?.openLink) {
+        try { webApp.openLink(data.link) } catch { window.open(data.link, '_blank') }
+      } else {
+        window.open(data.link, '_blank')
+      }
     } else {
       alert('Ошибка создания ссылки: ' + data.error)
     }
