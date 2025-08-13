@@ -13,8 +13,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'amountRub and sessionId are required' }, { status: 400 })
     }
 
-    const merchantId = process.env.FK_MERCHANT_ID
-    const secret1 = process.env.FK_SECRET_1
+    const merchantId = process.env.FK_MERCHANT_ID || '64641'
+    const secret1 = process.env.FK_SECRET_1 || 'OpBLaq&c/q=SJ3F'
+    
+    console.log('FK Debug:', { merchantId, secret1: secret1 ? '***' : 'MISSING', amountRub })
+    
     if (!merchantId || !secret1) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
     }
@@ -23,8 +26,10 @@ export async function POST(req: NextRequest) {
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
     // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
-    // В SCI регистрозависимости нет, передадим в нижнем регистре
-    const sign = md5([merchantId, amount, secret1, oid].join(':'))
+    const signString = [merchantId, amount, secret1, oid].join(':')
+    const sign = md5(signString)
+    
+    console.log('Signature:', { signString, sign })
 
     // Согласно SCI, платёжная форма отдается с домена pay.fk.money
     // https://docs.freekassa.net (Раздел SCI → Настройка формы оплаты)
