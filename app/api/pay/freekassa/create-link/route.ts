@@ -13,11 +13,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'amountRub and sessionId are required' }, { status: 400 })
     }
 
-    const merchantId = process.env.FK_MERCHANT_ID || '64641'
-    const secret1 = process.env.FK_SECRET_1 || 'OpBLaq&c/q=SJ3F'
-    
-    console.log('FK Debug:', { merchantId, secret1: secret1 ? '***' : 'MISSING', amountRub })
-    
+    const merchantId = process.env.FK_MERCHANT_ID
+    const secret1 = process.env.FK_SECRET_1
+
     if (!merchantId || !secret1) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
     }
@@ -28,13 +26,10 @@ export async function POST(req: NextRequest) {
     // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
     const signString = [merchantId, amount, secret1, oid].join(':')
     const sign = md5(signString)
-    
-    console.log('Signature:', { signString, sign })
 
-    // Согласно SCI, платёжная форма отдается с домена pay.fk.money
-    // https://docs.freekassa.net (Раздел SCI → Настройка формы оплаты)
-    // На части аккаунтов используется fmt.me. Оставим базу pay.fk.money.
-    const url = new URL('https://pay.fk.money/')
+    // Используем официальные домены платёжной формы (оба валидны по SCI)
+    // Выбираем pay.freekassa.ru для совместимости
+    const url = new URL('https://pay.freekassa.ru/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
     url.searchParams.set('o', oid)
