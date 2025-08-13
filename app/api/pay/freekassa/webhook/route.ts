@@ -13,6 +13,11 @@ export async function POST(req: NextRequest) {
     const params: Record<string, string> = {}
     body.forEach((v, k) => { params[k] = String(v) })
 
+    // Если это проверка статуса из личного кабинета (без параметров) — отвечаем 200
+    if (Object.keys(params).length === 0) {
+      return new NextResponse('OK', { status: 200 })
+    }
+
     const secret1 = process.env.FK_SECRET_1 || ''
     const secret2 = process.env.FK_SECRET_2 || ''
     if (!secret1 || !secret2) return NextResponse.json({ ok: false }, { status: 500 })
@@ -65,5 +70,10 @@ export async function POST(req: NextRequest) {
     console.error('freekassa webhook error', e)
     return NextResponse.json({ ok: false }, { status: 500 })
   }
+}
+
+export async function GET() {
+  // Для кнопки "Проверить статус" в FK
+  return new NextResponse('OK', { status: 200 })
 }
 
