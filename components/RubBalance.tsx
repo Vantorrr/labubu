@@ -38,34 +38,23 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   const current = sizeClasses[size]
 
   const topup = async () => {
-    const amountStr = prompt('Введите сумму пополнения в рублях', '199')
-    if (!amountStr || amountStr.trim() === '') return
-    
-    const amountRub = parseFloat(amountStr.replace(',', '.'))
-    if (!amountRub || amountRub <= 0) {
-      alert('Введите корректную сумму')
-      return
-    }
-    
+    alert('Кнопка нажата! Открываем оплату на 199₽')
     const sessionId = getUserId(telegramUser)
     try {
       const res = await fetch('/api/pay/freekassa/create-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountRub, sessionId, product: 'topup_rub' })
+        body: JSON.stringify({ amountRub: 199, sessionId, product: 'topup_rub' })
       })
       const data = await res.json()
       if (data.success && data.link) {
-        if (isTelegramApp && webApp?.openLink) {
-          try { webApp.openLink(data.link) } catch { window.open(data.link, '_blank') }
-        } else {
-          window.open(data.link, '_blank')
-        }
+        alert('Ссылка создана: ' + data.link)
+        window.open(data.link, '_blank')
       } else {
         alert('Ошибка создания ссылки: ' + (data.error || 'неизвестная ошибка'))
       }
     } catch (error) {
-      alert('Ошибка сети. Попробуйте еще раз.')
+      alert('Ошибка сети: ' + error)
     }
   }
 
