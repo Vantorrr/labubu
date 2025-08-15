@@ -5,6 +5,16 @@ function md5(s: string) {
   return crypto.createHash('md5').update(s).digest('hex')
 }
 
+// Формат суммы для FK: без лишних нулей (199 вместо 199.00),
+// но с двумя знаками, если есть копейки (199.50)
+function formatAmountForFK(amountRub: number | string): string {
+  const n = Number(amountRub)
+  if (!Number.isFinite(n)) return '0'
+  const fixed = n.toFixed(2)
+  // убираем завершающие нули и возможную точку
+  return fixed.replace(/\.00$/, '').replace(/\.0$/, '').replace(/\.$/, '')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { amountRub, sessionId, product = 'spins_10', orderId } = await req.json()
@@ -27,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
     }
 
-    const amount = Number(amountRub).toFixed(2)
+    const amount = formatAmountForFK(amountRub)
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
     // Пробуем разные варианты подписи FK - иногда они меняют формат
