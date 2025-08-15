@@ -27,7 +27,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen mobile-optimized">
-      <div className="p-4 flex justify-center"><RubBalance size="md" /></div>
       <Roulette />
     </div>
   )

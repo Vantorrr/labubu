@@ -38,29 +38,34 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   const current = sizeClasses[size]
 
   const topup = async () => {
-    let amountRub = 199
-    try {
-      const amountStr = prompt('Введите сумму пополнения в рублях', '199')
-      if (amountStr && amountStr.trim() !== '') {
-        const parsed = parseFloat(amountStr.replace(',', '.'))
-        if (!isNaN(parsed) && parsed > 0) amountRub = parsed
-      }
-    } catch {}
+    const amountStr = prompt('Введите сумму пополнения в рублях', '199')
+    if (!amountStr || amountStr.trim() === '') return
+    
+    const amountRub = parseFloat(amountStr.replace(',', '.'))
+    if (!amountRub || amountRub <= 0) {
+      alert('Введите корректную сумму')
+      return
+    }
+    
     const sessionId = getUserId(telegramUser)
-    const res = await fetch('/api/pay/freekassa/create-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amountRub, sessionId, product: 'topup_rub' })
-    })
-    const data = await res.json()
-    if (data.success && data.link) {
-      if (isTelegramApp && webApp?.openLink) {
-        try { webApp.openLink(data.link) } catch { window.open(data.link, '_blank') }
+    try {
+      const res = await fetch('/api/pay/freekassa/create-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountRub, sessionId, product: 'topup_rub' })
+      })
+      const data = await res.json()
+      if (data.success && data.link) {
+        if (isTelegramApp && webApp?.openLink) {
+          try { webApp.openLink(data.link) } catch { window.open(data.link, '_blank') }
+        } else {
+          window.open(data.link, '_blank')
+        }
       } else {
-        window.open(data.link, '_blank')
+        alert('Ошибка создания ссылки: ' + (data.error || 'неизвестная ошибка'))
       }
-    } else {
-      alert('Ошибка создания ссылки: ' + data.error)
+    } catch (error) {
+      alert('Ошибка сети. Попробуйте еще раз.')
     }
   }
 
