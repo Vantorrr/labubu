@@ -30,15 +30,24 @@ export async function POST(req: NextRequest) {
     const amount = Number(amountRub).toFixed(2)
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
-    // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
-    // По официальной документации FK валюта НЕ участвует в подписи
-    const signString = [merchantId, amount, secret1, oid].join(':')
-    const sign = md5(signString).toUpperCase()
+    // Пробуем разные варианты подписи FK - иногда они меняют формат
+    const variants = [
+      [merchantId, amount, secret1, oid].join(':'),                    // стандартный
+      [merchantId, amount, secret1, 'RUB', oid].join(':'),             // с валютой  
+      [merchantId, amount, 'RUB', secret1, oid].join(':'),             // валюта перед секретом
+      [oid, merchantId, amount, secret1].join(':'),                    // order_id первый
+      [secret1, merchantId, amount, oid].join(':'),                    // секрет первый
+    ]
     
-    console.log('🔧 DEBUG SIGNATURE:', {
-      signString,
-      generatedSign: sign
-    })
+    console.log('🔧 DEBUG ALL VARIANTS:', variants.map((v, i) => ({ 
+      variant: i+1, 
+      string: v, 
+      hash: md5(v).toUpperCase() 
+    })))
+    
+    // Используем стандартный вариант
+    const signString = variants[0]
+    const sign = md5(signString).toUpperCase()
 
     // Пробуем альтернативный домен FK
     const url = new URL('https://pay.freekassa.ru/')
