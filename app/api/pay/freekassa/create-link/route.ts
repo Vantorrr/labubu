@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'amountRub and sessionId are required' }, { status: 400 })
     }
 
-    const merchantId = (process.env.FK_MERCHANT_ID || '').trim()
-    const secret1 = (process.env.FK_SECRET_1 || '').trim()
+    const merchantId = (process.env.FK_MERCHANT_ID_OVERRIDE || process.env.FK_MERCHANT_ID || '').trim()
+    const secret1 = (process.env.FK_SECRET_1_OVERRIDE || process.env.FK_SECRET_1 || '').trim()
 
     if (!merchantId || !secret1) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
