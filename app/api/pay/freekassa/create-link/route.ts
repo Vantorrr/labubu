@@ -23,8 +23,9 @@ export async function POST(req: NextRequest) {
     const amount = Number(amountRub).toFixed(2)
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
-    // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:ORDER_ID)
-    const signString = [merchantId, amount, secret1, oid].join(':')
+    // Подпись для ссылки оплаты (SCI): md5(MERCHANT_ID:AMOUNT:SECRET_WORD_1:CURRENCY:ORDER_ID)
+    // По документации FK иногда нужна валюта в подписи
+    const signString = [merchantId, amount, secret1, 'RUB', oid].join(':')
     const sign = md5(signString).toUpperCase()
 
     // Используем официальный домен SCI. Если провайдер блокирует, FK рекомендует pay.fk.money

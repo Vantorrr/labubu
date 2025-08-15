@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useTelegram } from '@/components/TelegramProvider'
 import { getUserId } from '@/utils/getUserId'
+import FKWidget from './FKWidget'
 
 interface RubBalanceProps {
   className?: string
@@ -13,6 +14,7 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   const { user: telegramUser, isTelegramApp, webApp } = useTelegram()
   const [rub, setRub] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [showWidget, setShowWidget] = useState(false)
 
   useEffect(() => { load() }, [telegramUser])
 
@@ -37,25 +39,10 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   } as const
   const current = sizeClasses[size]
 
-  const topup = async () => {
-    alert('Кнопка нажата! Открываем оплату на 199₽')
-    const sessionId = getUserId(telegramUser)
-    try {
-      const res = await fetch('/api/pay/freekassa/create-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountRub: 199, sessionId, product: 'topup_rub' })
-      })
-      const data = await res.json()
-      if (data.success && data.link) {
-        alert('Ссылка создана: ' + data.link)
-        window.open(data.link, '_blank')
-      } else {
-        alert('Ошибка создания ссылки: ' + (data.error || 'неизвестная ошибка'))
-      }
-    } catch (error) {
-      alert('Ошибка сети: ' + error)
-    }
+  const handlePaymentSuccess = (amount: number) => {
+    // Обновляем баланс после успешной оплаты
+    setRub(prev => prev + amount * 100) // FK работает в копейках
+    setShowWidget(false)
   }
 
   if (loading) {
@@ -67,10 +54,28 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   }
 
   return (
-    <div className={`bg-white/20 backdrop-blur-sm rounded-full ${current.container} ${className} flex items-center gap-3`}> 
-      <span className={`text-white font-bold ${current.text}`}>{(rub / 100).toLocaleString('ru-RU')} ₽</span>
-      <button onClick={topup} className="bg-yellow-400 text-black rounded-full px-3 py-1 text-sm font-bold hover:bg-yellow-300">Пополнить</button>
-    </div>
+    <>
+      <div className={`bg-white/20 backdrop-blur-sm rounded-full ${current.container} ${className} flex items-center gap-3`}> 
+        <span className={`text-white font-bold ${current.text}`}>{(rub / 100).toLocaleString('ru-RU')} ₽</span>
+        <button 
+          onClick={() => setShowWidget(true)} 
+          className="bg-yellow-400 text-black rounded-full px-3 py-1 text-sm font-bold hover:bg-yellow-300 transition-colors"
+        >
+          Пополнить
+        </button>
+      </div>
+      
+      {showWidget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-md">
+            <FKWidget 
+              onSuccess={handlePaymentSuccess}
+              onClose={() => setShowWidget(false)}
+            />
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
