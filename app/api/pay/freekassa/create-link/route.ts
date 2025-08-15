@@ -16,6 +16,13 @@ export async function POST(req: NextRequest) {
     const merchantId = (process.env.FK_MERCHANT_ID_OVERRIDE || process.env.FK_MERCHANT_ID || '').trim()
     const secret1 = (process.env.FK_SECRET_1_OVERRIDE || process.env.FK_SECRET_1 || '').trim()
 
+    console.log('🔧 DEBUG FK CONFIG:', {
+      merchantId,
+      secret1,
+      override_merchant: process.env.FK_MERCHANT_ID_OVERRIDE,
+      override_secret: process.env.FK_SECRET_1_OVERRIDE
+    })
+
     if (!merchantId || !secret1) {
       return NextResponse.json({ success: false, error: 'FreeKassa not configured' }, { status: 500 })
     }
@@ -27,6 +34,11 @@ export async function POST(req: NextRequest) {
     // По официальной документации FK валюта НЕ участвует в подписи
     const signString = [merchantId, amount, secret1, oid].join(':')
     const sign = md5(signString).toUpperCase()
+    
+    console.log('🔧 DEBUG SIGNATURE:', {
+      signString,
+      generatedSign: sign
+    })
 
     // Используем официальный домен SCI. Если провайдер блокирует, FK рекомендует pay.fk.money
     const url = new URL('https://pay.fk.money/')
