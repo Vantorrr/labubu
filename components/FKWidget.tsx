@@ -14,17 +14,36 @@ export default function FKWidget({ onSuccess, onClose }: FKWidgetProps) {
   const [widgetUrl, setWidgetUrl] = useState('')
   const { user, webApp } = useTelegram()
 
-  const openPayment = () => {
+  const openPayment = async () => {
     const amountNum = parseInt(amount)
     if (!amountNum || amountNum < 1) {
       alert('Введите корректную сумму (минимум 1₽)')
       return
     }
 
-    // Используем официальный виджет FK с динамической суммой
-    const widgetUrl = `https://widgets.freekassa.net?type=payment-window&lang=ru&theme=light&default_amount=${amountNum}&api_key=ada8919a588498402baed5e5a495ca03&shopID=64641`
-    setWidgetUrl(widgetUrl)
-    setShowWidget(true)
+    // Используем SCI ссылку как в документации FK - более надежно чем виджет
+    try {
+      const response = await fetch('/api/pay/freekassa/create-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountRub: amountNum,
+          sessionId: user?.id?.toString() || Date.now().toString(),
+          product: 'topup_rub'
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setWidgetUrl(data.link)
+        setShowWidget(true)
+      } else {
+        alert('Ошибка создания платежа: ' + (data.error || 'Неизвестная ошибка'))
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      alert('Ошибка соединения')
+    }
   }
 
   const closeWidget = () => {
