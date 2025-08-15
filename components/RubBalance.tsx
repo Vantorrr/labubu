@@ -38,10 +38,14 @@ export default function RubBalance({ className = '', size = 'md' }: RubBalancePr
   const current = sizeClasses[size]
 
   const topup = async () => {
-    const amountStr = prompt('Введите сумму пополнения в рублях', '199')
-    if (!amountStr) return
-    const amountRub = parseFloat(amountStr.replace(',', '.'))
-    if (!amountRub || amountRub <= 0) return
+    let amountRub = 199
+    try {
+      const amountStr = prompt('Введите сумму пополнения в рублях', '199')
+      if (amountStr && amountStr.trim() !== '') {
+        const parsed = parseFloat(amountStr.replace(',', '.'))
+        if (!isNaN(parsed) && parsed > 0) amountRub = parsed
+      }
+    } catch {}
     const sessionId = getUserId(telegramUser)
     const res = await fetch('/api/pay/freekassa/create-link', {
       method: 'POST',
