@@ -10,44 +10,21 @@ interface FKWidgetProps {
 
 export default function FKWidget({ onSuccess, onClose }: FKWidgetProps) {
   const [amount, setAmount] = useState('')
-  const [loading, setLoading] = useState(false)
   const [showWidget, setShowWidget] = useState(false)
   const [widgetUrl, setWidgetUrl] = useState('')
   const { user, webApp } = useTelegram()
 
-  const openPayment = async () => {
+  const openPayment = () => {
     const amountNum = parseInt(amount)
     if (!amountNum || amountNum < 1) {
       alert('Введите корректную сумму (минимум 1₽)')
       return
     }
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/pay/freekassa/create-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amountRub: amountNum,
-          sessionId: user?.id?.toString() || 'guest',
-          product: 'topup_rub'
-        })
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        // Используем iframe для встроенной оплаты
-        setWidgetUrl(data.link)
-        setShowWidget(true)
-      } else {
-        alert('Ошибка создания платежа: ' + (data.error || 'Неизвестная ошибка'))
-      }
-    } catch (error) {
-      console.error('Payment error:', error)
-      alert('Ошибка соединения')
-    } finally {
-      setLoading(false)
-    }
+    // Используем официальный виджет FK с динамической суммой
+    const widgetUrl = `https://widgets.freekassa.net?type=payment-window&lang=ru&theme=light&default_amount=${amountNum}&api_key=ada8919a588498402baed5e5a495ca03&shopID=64641`
+    setWidgetUrl(widgetUrl)
+    setShowWidget(true)
   }
 
   const closeWidget = () => {
@@ -115,10 +92,10 @@ export default function FKWidget({ onSuccess, onClose }: FKWidgetProps) {
 
       <button
         onClick={openPayment}
-        disabled={loading || !amount}
+        disabled={!amount}
         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-6 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"
       >
-        {loading ? 'Создание платежа...' : `💳 Пополнить ${amount || ''}₽`}
+        💳 Пополнить {amount || ''}₽
       </button>
 
       <div className="mt-4 text-xs text-gray-500 text-center">
