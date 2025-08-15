@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
       generatedSign: sign
     })
 
-    // Используем официальный домен SCI. Если провайдер блокирует, FK рекомендует pay.fk.money
-    const url = new URL('https://pay.fk.money/')
+    // Пробуем альтернативный домен FK
+    const url = new URL('https://pay.freekassa.ru/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
     url.searchParams.set('o', oid)
