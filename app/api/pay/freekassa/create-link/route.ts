@@ -40,23 +40,11 @@ export async function POST(req: NextRequest) {
     const amount = formatAmountForFK(amountRub)
     const oid = orderId || `${Date.now()}_${Math.floor(Math.random() * 1e6)}`
 
-    // Пробуем разные варианты подписи FK - иногда они меняют формат
-    const variants = [
-      [merchantId, amount, secret1, oid].join(':'),                    // стандартный
-      [merchantId, amount, secret1, 'RUB', oid].join(':'),             // с валютой  
-      [merchantId, amount, 'RUB', secret1, oid].join(':'),             // валюта перед секретом
-      [oid, merchantId, amount, secret1].join(':'),                    // order_id первый
-      [secret1, merchantId, amount, oid].join(':'),                    // секрет первый
-    ]
-    
-    console.log('🔧 DEBUG ALL VARIANTS:', variants.map((v, i) => ({ 
-      variant: i+1, 
-      string: v, 
-      hash: md5(v).toUpperCase() 
-    })))
-    
-    // Используем стандартный вариант
-    const signString = variants[0]
+    // Поддерживаем оба варианта по документации:
+    // - без валюты md5(m:oa:secret1:o)
+    // - с валютой md5(m:oa:secret1:currency:o) если параметр currency передаётся
+    const currency = 'RUB'
+    const signString = [merchantId, amount, secret1, currency, oid].join(':')
     const sign = md5(signString).toUpperCase()
 
     // Пробуем альтернативный домен FK
@@ -64,7 +52,7 @@ export async function POST(req: NextRequest) {
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
     url.searchParams.set('o', oid)
-    url.searchParams.set('currency', 'RUB')
+    url.searchParams.set('currency', currency)
     url.searchParams.set('us_session', sessionId)
     url.searchParams.set('us_product', product)
     url.searchParams.set('s', sign)
