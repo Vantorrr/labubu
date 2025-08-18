@@ -55,7 +55,10 @@ export async function POST(req: NextRequest) {
       try {
         apiTried = true
         const nonce = Date.now()
-        const apiSignature = md5([merchantId, nonce, apiKey].join(':')) // согласно API FK
+        // Новый алгоритм подписи: HMAC-SHA256(key=apiKey, data=shopId|nonce|paymentId|amount|currency)
+        const hmac = require('crypto').createHmac('sha256', apiKey)
+        const signPayload = [String(merchantId), String(nonce), String(oid), String(amount), String(currency)].join('|')
+        const apiSignature = hmac.update(signPayload).digest('hex')
         const apiRes = await fetch('https://api.fk.life/v1/orders/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,6 +69,11 @@ export async function POST(req: NextRequest) {
             paymentId: oid,
             amount: Number(amount),
             currency,
+            // Отладочная информация на стороне FK: что мы подписали
+            // Не влияет на проверку, но помогает саппорту
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            _debug_sign_payload: signPayload
           })
         })
         apiStatus = apiRes.status
