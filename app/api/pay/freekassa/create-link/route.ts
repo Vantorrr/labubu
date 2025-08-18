@@ -49,8 +49,11 @@ export async function POST(req: NextRequest) {
 
     // Если настроен API-ключ FK, пробуем создать заказ через API (актуальный способ)
     const apiKey = (process.env.FK_API_KEY || '').trim()
+    let apiTried = false
+    let apiStatus: number | undefined
     if (apiKey) {
       try {
+        apiTried = true
         const nonce = Date.now()
         const apiSignature = md5([merchantId, nonce, apiKey].join(':')) // согласно API FK
         const apiRes = await fetch('https://api.fk.life/v1/orders/create', {
@@ -65,11 +68,12 @@ export async function POST(req: NextRequest) {
             currency,
           })
         })
+        apiStatus = apiRes.status
         const apiData = await apiRes.json().catch(() => null)
         if (apiRes.ok && apiData) {
           const location = apiData?.location || apiData?.data?.location || apiData?.data?.link || apiData?.link
           if (location) {
-            return NextResponse.json({ success: true, link: String(location), orderId: oid, via: 'api' })
+            return NextResponse.json({ success: true, link: String(location), orderId: oid, via: 'api', apiPresent: true })
           }
         }
       } catch {}
@@ -86,7 +90,7 @@ export async function POST(req: NextRequest) {
     url.searchParams.set('s', sign)
     url.searchParams.set('lang', 'ru')
 
-    return NextResponse.json({ success: true, link: url.toString(), orderId: oid, via: 'sci' })
+    return NextResponse.json({ success: true, link: url.toString(), orderId: oid, via: 'sci', apiPresent: Boolean(apiKey), apiTried, apiStatus })
   } catch (e) {
     console.error('freekassa create-link error', e)
     return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 })
