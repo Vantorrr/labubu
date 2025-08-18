@@ -47,7 +47,35 @@ export async function POST(req: NextRequest) {
     const signString = [merchantId, amount, secret1, currency, oid].join(':')
     const sign = md5(signString).toUpperCase()
 
-    // Пробуем альтернативный домен FK
+    // Если настроен API-ключ FK, пробуем создать заказ через API (актуальный способ)
+    const apiKey = (process.env.FK_API_KEY || '').trim()
+    if (apiKey) {
+      try {
+        const nonce = Date.now()
+        const apiSignature = md5([merchantId, nonce, apiKey].join(':')) // согласно API FK
+        const apiRes = await fetch('https://api.fk.life/v1/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shopId: Number(merchantId),
+            nonce,
+            signature: apiSignature,
+            paymentId: oid,
+            amount: Number(amount),
+            currency,
+          })
+        })
+        const apiData = await apiRes.json().catch(() => null)
+        if (apiRes.ok && apiData) {
+          const location = apiData?.location || apiData?.data?.location || apiData?.data?.link || apiData?.link
+          if (location) {
+            return NextResponse.json({ success: true, link: String(location), orderId: oid, via: 'api' })
+          }
+        }
+      } catch {}
+    }
+
+    // Fallback на классический SCI
     const url = new URL('https://pay.freekassa.ru/')
     url.searchParams.set('m', String(merchantId))
     url.searchParams.set('oa', String(amount))
@@ -58,7 +86,7 @@ export async function POST(req: NextRequest) {
     url.searchParams.set('s', sign)
     url.searchParams.set('lang', 'ru')
 
-    return NextResponse.json({ success: true, link: url.toString(), orderId: oid })
+    return NextResponse.json({ success: true, link: url.toString(), orderId: oid, via: 'sci' })
   } catch (e) {
     console.error('freekassa create-link error', e)
     return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 })
