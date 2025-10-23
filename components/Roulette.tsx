@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useTelegram } from '@/components/TelegramProvider'
 import { getUserId } from '@/utils/getUserId'
 import LabuBalance from '@/components/LabuBalance'
-import RubBalance from '@/components/RubBalance'
+// DEMO: убираем отображение рублевого баланса
 import PayButtons from '@/app/components/PayButtons'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
@@ -512,7 +512,7 @@ export default function Roulette() {
             Крути рулетку и выигрывай настоящие призы!
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-4">
-            <RubBalance size="lg" />
+            {/* DEMO: скрыто */}
             <LabuBalance size="lg" />
             <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2">
               <span className="text-white font-bold flex items-center gap-2">

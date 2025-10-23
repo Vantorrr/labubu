@@ -35,21 +35,14 @@ export async function POST(request: NextRequest) {
     const spinCost = parseInt(spinCostSetting?.value || '10000')
     const duplicateReward = parseInt(duplicateRewardSetting?.value || '200')
 
-    // Проверяем и списываем рублевый баланс (в копейках)
-    const freshUser = await prisma.user.findUnique({ where: { id: user.id } })
-    if (!freshUser || freshUser.rubBalance < spinCost) {
-      return NextResponse.json({ success: false, error: 'Недостаточно средств на балансе', code: 'INSUFFICIENT_FUNDS' }, { status: 402 })
-    }
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { rubBalance: { decrement: spinCost } }
-    })
+    // DEMO: не списываем рублевый баланс и не проверяем остаток
 
     // Создаем спин
     const spin = await prisma.spin.create({
       data: {
         userId: user.id,
-        amount: spinCost
+        // DEMO: запись спина без фактического списания
+        amount: 0
       }
     })
 

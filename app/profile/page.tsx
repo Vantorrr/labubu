@@ -7,7 +7,7 @@ import { FaCoins, FaGift, FaCrown, FaChartLine, FaClock, FaMoneyBillWave, FaUser
 import { useTelegram } from '@/components/TelegramProvider'
 import { getUserId } from '@/utils/getUserId'
 import LabuBalance from '@/components/LabuBalance'
-import RubBalance from '@/components/RubBalance'
+// DEMO: убран рублевый баланс
 import Image from 'next/image'
 
 interface ProfileData {
@@ -258,7 +258,6 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between gap-3">
               <h1 className="text-2xl font-bold text-white">👤 Профиль</h1>
               <div className="flex items-center gap-2">
-                <RubBalance size="sm" />
                 <LabuBalance size="sm" showLabel={false} />
               </div>
             </div>
