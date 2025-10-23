@@ -722,7 +722,7 @@ export default function Roulette() {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <span className="text-lg sm:text-xl">🎲 СПИН</span>
+                <span className="text-lg sm:text-xl">Корченков С.</span>
                 <span className="text-yellow-300 text-sm font-bold">120₽</span>
               </div>
             )}
@@ -750,7 +750,7 @@ export default function Roulette() {
               </div>
             ) : (
               <div className="flex flex-col items-center">
-                <span className="text-lg sm:text-xl">🔥 ПРЕМИУМ x2</span>
+                <span className="text-lg sm:text-xl">Корченков С.</span>
                 <span className="text-yellow-300 text-sm font-bold">199₽</span>
                 <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-1 rounded-bl-lg">
                   2x шанс!
